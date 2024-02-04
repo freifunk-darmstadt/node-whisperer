@@ -56,6 +56,7 @@ struct gluon_beacon_information_source information_sources[] = {
 	{
 		.name = "node_id",
 		.type = 1,
+		.fixed_size = 6,
 		.collect = gluon_beacon_diagnostic_information_node_id,
 	},
 	{
