@@ -1,0 +1,30 @@
+name: Test Build
+on: [ push, pull_request]
+jobs:
+  build:
+    name: ${{ matrix.arch }} ${{ matrix.version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch:
+          - mips_24kc
+          - mipsel_24kc
+          - powerpc_8548
+          - x86_64
+        version:
+          - "23.05.2"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        uses: openwrt/gh-action-sdk@v7
+        env:
+          ARCH: ${{ matrix.arch }}-${{ matrix.version }}
+          FEEDNAME: packages_ci
+          PACKAGES: "gluon-diagnostic"
+          KEY_BUILD: "RWRCSwAAAADDDX5uZK8x5UDT1RoVpOmbik/2kEoWm9q08QB6E0im50hNLwPpOfKCFURVvNR0iDGePQm5pnrZKX3OYyfsbv9G6eGsrlozbXFnGJXI3Szjb/Th7Uhd7mLSIh0wLyjIYEI="
+          V: s
+      - name: Store packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.arch }}-${{ matrix.version }}-packages
+          path: bin/packages/${{ matrix.arch }}/packages_ci/*.ipk
