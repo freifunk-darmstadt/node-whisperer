@@ -4,8 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <stddef.h>
-#include "util.h"
-#include "information.h"
+
+#include "gluon-diagnostic.h"
 
 #define HOSTNAME_PATH "/home/dbauer/test"
 #define BEACON_BUFFER_SIZE 512
@@ -17,6 +17,9 @@ struct gluon_beacon_information {
 		size_t size; /* Buffer Size */
 	} output;
 };
+
+struct ubus_context *ubus_ctx;
+
 
 struct gluon_beacon_information gbi = {};
 extern struct gluon_beacon_information_source information_sources[];
@@ -96,7 +99,7 @@ int buffer_to_hexstring(uint8_t *buf, size_t len, uint8_t *hexstring) {
 	return 0;
 }
 
-int main(int argc, char *argv[]) {
+static void collect_information(struct uloop_timeout *timeout) {
 	create_vendor_element_buf();
 	
 	/* Allocate output buffer */
@@ -104,20 +107,37 @@ int main(int argc, char *argv[]) {
 	uint8_t *buf_hex = malloc(buf_len);
 	
 	buffer_to_hexstring(gbi.output.buf, gbi.output.len, buf_hex);
+	log_debug("Update %s\n", buf_hex);
+	free(buf_hex);
+}
 
-	if (argc > 1) {
-		/* Set in ubus for each radio */
-		for (int i = 1; i < argc; i++) {
-			/* Ugly */
-			char ubus_cmd_buf[2048] = {};
-			if (snprintf(ubus_cmd_buf, 2048, "ubus call hostapd.%s set_vendor_elements '{\"vendor_elements\": \"%s\"}'", argv[i], buf_hex) < 0) {
-				printf("Error: Could not create ubus command!\n");
-				continue;
-			}
-			printf("Set %s to %s / %s\n", argv[i], buf_hex, ubus_cmd_buf);
-			system(ubus_cmd_buf);
-		}
+static int start_daemon() {
+	struct uloop_timeout information_update_timeout;
+
+	uloop_init();
+
+	ubus_ctx = ubus_connect(NULL);
+	if (!ubus_ctx) {
+		fprintf(stderr, "Failed to connect to ubus\n");
+		return -1;
 	}
 
+	/* Init ubus */
+	ubus_add_uloop(ubus_ctx);
+	gluon_diagnostic_ubus_init(ubus_ctx);
+
+	/* Add Information gathering timer */
+	information_update_timeout.cb = collect_information;
+	uloop_timeout_set(&information_update_timeout, 1000);
+
+	uloop_run();
+
+	/* Terminate */
+	uloop_done();
+	return 0;
+}
+
+int main(int argc, char *argv[]) {
+	start_daemon();
 	return 0;
 }
