@@ -21,9 +21,15 @@ define Package/gluon-diagnostic
   TITLE:=Daemon for Gluon diagnostic using 802.11 beacon frames
 endef
 
+define Package/gluon-diagnostic/conffiles
+/etc/config/gluon-diagnostic
+endef
+
 define Package/gluon-diagnostic/install
-	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc/init.d $(1)/etc/config
 	$(CP) $(PKG_BUILD_DIR)/src/gluon-diagnostic $(1)/usr/bin
+	$(INSTALL_BIN) ./files/gluon-diagnostic.init $(1)/etc/init.d/gluon-diagnostic
+	$(CP) ./files/gluon-diagnostic.uci $(1)/etc/config/gluon-diagnostic
 endef
 
 $(eval $(call BuildPackage,gluon-diagnostic))
