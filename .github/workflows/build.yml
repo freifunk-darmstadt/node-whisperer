@@ -13,6 +13,7 @@ jobs:
           - x86_64
         version:
           - "23.05.2"
+          - "main"
     steps:
       - uses: actions/checkout@v4
       - name: Build
