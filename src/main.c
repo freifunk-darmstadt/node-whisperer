@@ -62,6 +62,7 @@ int create_vendor_element_buf() {
 	for (int i = 0; information_sources[i].name; i++) {
 		/* Check if we have space for T + L + {data} */
 		if (gbi.output.len + 3 > gbi.output.size) {
+			log_error("Buffer too small for id=%d name=%s", i, information_sources[i].name);
 			break;
 		}
 
@@ -76,21 +77,30 @@ int create_vendor_element_buf() {
 		int ret = information_sources[i].collect(&gbi.output.buf[gbi.output.len + 2], gbi.output.size - gbi.output.len - 2);
 		if (ret == 0) {
 			/* No Information available */
+			log_error("No Information available for id=%d name=%s", i, information_sources[i].name);
 			continue;
+		} else if (ret > 0xff) {
+			/* Too much Information */
+			log_error("Too much Information for id=%d name=%s", i, information_sources[i].name);
+			return -ENOMEM;
 		} else if (ret < 0) {
 			/* Error */
+			log_error("Error collecting Information for id=%d name=%s code=%d", i, information_sources[i].name, ret);
 			return ret;
 		}
 
 		/* Update Length of Field*/
-		*element_length = ret;
+		*element_length = (uint8_t)ret;
 
 		/* Update total Length */
 		gbi.output.len += ret + 2;
+
+		log_debug("Add Element to beacon id=%d name=%s element_length=%d total_length=%d\n", i, information_sources[i].name, ret, gbi.output.len);
 	}
 
 	/* Set Length */
 	gbi.output.buf[1] = gbi.output.len - 2;
+	log_debug("Set length of beacon element element_length=%u total_length=%d\n", gbi.output.buf[1], gbi.output.len);
 
 	return 0;
 }
