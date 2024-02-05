@@ -26,14 +26,28 @@ static void gluon_diagnostic_interface_handle_remove(struct ubus_context *ctx,
 int gluon_diagnostic_interface_update(struct ubus_context *ctx, char *vendor_elements)
 {
 	struct gluon_diagnostic_interface *iface;
-
-	blob_buf_init(&b, 0);
-	blobmsg_add_string(&b, "vendor_elements", vendor_elements);
+	int ret;
 
 	list_for_each_entry(iface, &gluon_diagnostic_interfaces, list) {
+		blob_buf_init(&b, 0);
+		blobmsg_add_string(&b, "vendor_elements", vendor_elements);
+
 		log_debug("Sending vendor elements to id=%d name=%s", iface->ubus.id, iface->ubus.name);
-		ubus_invoke(ctx, iface->ubus.id, "set_vendor_elements", b.head, NULL, NULL, 1000);
+		ret = ubus_invoke(ctx, iface->ubus.id, "set_vendor_elements", b.head, NULL, NULL, 1000);
+		if (ret) {
+			log_error("Failed to send vendor elements to id=%d name=%s code=%d", iface->ubus.id, iface->ubus.name, ret);
+
+			/* Delete element */
+			blob_buf_init(&b, 0);
+			blobmsg_add_string(&b, "vendor_elements", "");
+			ret = ubus_invoke(ctx, iface->ubus.id, "set_vendor_elements", b.head, NULL, NULL, 1000);
+			if (ret) {
+				log_error("Failed to reset vendor elements for id=%d name=%s code=%d", iface->ubus.id, iface->ubus.name, ret);
+			}
+		}
 	}
+
+	return 0;
 }
 
 int gluon_diagnostic_interface_remove(struct ubus_context *ctx,
