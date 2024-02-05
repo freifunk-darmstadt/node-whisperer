@@ -28,7 +28,7 @@ int gluon_beacon_diagnostic_information_node_id(uint8_t *buffer, size_t buffer_s
 		return -1;
 	}
 
-	ret = gd_read_file("/lib/gluon/core/sysconfig/node_id", &node_id_ascii, &node_id_ascii_len);
+	ret = gd_read_file("/lib/gluon/core/sysconfig/primary_mac", &node_id_ascii, &node_id_ascii_len);
 	if (ret) {
 		return ret;
 	}
