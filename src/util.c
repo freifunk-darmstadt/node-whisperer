@@ -43,3 +43,17 @@ int gd_parse_mac_address_ascii(char *mac_address_ascii, uint8_t *mac_address) {
 
 	return 0;
 }
+
+int gd_format_mac_address_string(const uint8_t *mac_address, char *mac_address_string) {
+	sprintf(mac_address_string, "%02x:%02x:%02x:%02x:%02x:%02x",
+		mac_address[0], mac_address[1], mac_address[2],
+		mac_address[3], mac_address[4], mac_address[5]);
+	return 0;
+}
+
+int gd_buffer_to_hexstring(const uint8_t *buf, size_t len, uint8_t *hexstring) {
+	for (size_t i = 0; i < len; i++) {
+		sprintf((char *)&hexstring[i * 2], "%02x", buf[i]);
+	}
+	return 0;
+}
