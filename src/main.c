@@ -6,6 +6,9 @@
 #include <stddef.h>
 
 #include "gluon-diagnostic.h"
+#include "daemon.h"
+
+#define UPDATE_INTERVAL (30 * 1000)
 
 #define HOSTNAME_PATH "/home/dbauer/test"
 #define BEACON_BUFFER_SIZE 512
@@ -100,6 +103,7 @@ int buffer_to_hexstring(uint8_t *buf, size_t len, uint8_t *hexstring) {
 }
 
 static void collect_information(struct uloop_timeout *timeout) {
+	struct gluon_diagnostic *instance = container_of(timeout, struct gluon_diagnostic, update_timeout);
 	create_vendor_element_buf();
 	
 	/* Allocate output buffer */
@@ -107,28 +111,33 @@ static void collect_information(struct uloop_timeout *timeout) {
 	uint8_t *buf_hex = malloc(buf_len);
 	
 	buffer_to_hexstring(gbi.output.buf, gbi.output.len, buf_hex);
+
+	/* Update nodes */
 	log_debug("Update %s\n", buf_hex);
+	gluon_diagnostic_interface_update(instance->ubus_ctx, (char *)buf_hex);
+
 	free(buf_hex);
+	uloop_timeout_set(timeout, UPDATE_INTERVAL);
 }
 
 static int start_daemon() {
-	struct uloop_timeout information_update_timeout;
+	struct gluon_diagnostic instance;
 
 	uloop_init();
 
-	ubus_ctx = ubus_connect(NULL);
-	if (!ubus_ctx) {
+	instance.ubus_ctx = ubus_connect(NULL);
+	if (!instance.ubus_ctx) {
 		fprintf(stderr, "Failed to connect to ubus\n");
 		return -1;
 	}
 
 	/* Init ubus */
-	ubus_add_uloop(ubus_ctx);
-	gluon_diagnostic_ubus_init(ubus_ctx);
+	ubus_add_uloop(instance.ubus_ctx);
+	gluon_diagnostic_ubus_init(instance.ubus_ctx);
 
 	/* Add Information gathering timer */
-	information_update_timeout.cb = collect_information;
-	uloop_timeout_set(&information_update_timeout, 1000);
+	instance.update_timeout.cb = collect_information;
+	uloop_timeout_set(&instance.update_timeout, 5 * 1000);
 
 	uloop_run();
 

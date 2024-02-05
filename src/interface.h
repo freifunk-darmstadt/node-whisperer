@@ -12,6 +12,8 @@ struct gluon_diagnostic_interface {
 	} ubus;
 };
 
+int gluon_diagnostic_interface_update(struct ubus_context *ctx, char *vendor_elements);
+
 int gluon_diagnostic_interface_remove(struct ubus_context *ctx,
 				      struct gluon_diagnostic_interface *iface);
 
