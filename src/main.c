@@ -86,7 +86,7 @@ int create_vendor_element_buf() {
 		} else if (ret < 0) {
 			/* Error */
 			log_error("Error collecting Information for id=%d name=%s code=%d", i, information_sources[i].name, ret);
-			return ret;
+			continue;
 		}
 
 		/* Update Length of Field*/
@@ -114,7 +114,9 @@ int buffer_to_hexstring(uint8_t *buf, size_t len, uint8_t *hexstring) {
 
 static void collect_information(struct uloop_timeout *timeout) {
 	struct gluon_diagnostic *instance = container_of(timeout, struct gluon_diagnostic, update_timeout);
-	create_vendor_element_buf();
+	if (create_vendor_element_buf() < 0) {
+		goto out_free;
+	}
 	
 	/* Allocate output buffer */
 	size_t buf_len = gbi.output.len * 2 + 1;
@@ -126,6 +128,7 @@ static void collect_information(struct uloop_timeout *timeout) {
 	log_debug("Update %s\n", buf_hex);
 	gluon_diagnostic_interface_update(instance->ubus_ctx, (char *)buf_hex);
 
+out_free:
 	free(buf_hex);
 	uloop_timeout_set(timeout, UPDATE_INTERVAL);
 }
