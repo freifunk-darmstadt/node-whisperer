@@ -2,8 +2,15 @@
 #include <stdio.h>
 #include "log.h"
 
+static enum log_level log_level = LOG_INFO;
+
 static void log_vprintf(enum log_level level, const char *fmt, va_list args) {
 	const char *level_str;
+
+	if (level < log_level) {
+		return;
+	}
+
 	switch (level) {
 	case LOG_DEBUG:
 		level_str = "DEBUG";

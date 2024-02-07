@@ -13,6 +13,7 @@
 #include <net/if.h>
 
 #include "ieee80211.h"
+#include "information.h"
 #include "log.h"
 #include "util.h"
 
@@ -38,6 +39,7 @@ struct handler_args {
 struct gluon_node {
 	uint8_t node_id[6];
 	char *information_elements;
+	size_t information_elements_len;
 };
 
 struct scanned_gluon_nodes {
@@ -45,6 +47,7 @@ struct scanned_gluon_nodes {
 	size_t len;
 };
 
+extern struct gluon_beacon_information_source information_sources[];
 static struct scanned_gluon_nodes scanned_nodes;
 
 static int error_handler(struct sockaddr_nl *nla, struct nlmsgerr *err, void *arg)
@@ -339,7 +342,7 @@ static int monitor_gluon_node_parse_tlv_node_id(const uint8_t *tlv, size_t tlv_l
 		return -EINVAL;
 	}
 
-	memcpy(node->node_id, tlv + 1, 6);
+	memcpy(node->node_id, tlv + 2, 6);
 	log_debug("Found node_id: %02x:%02x:%02x:%02x:%02x:%02x", node->node_id[0], node->node_id[1], node->node_id[2], node->node_id[3], node->node_id[4], node->node_id[5]);
 
 	return 0;
@@ -387,6 +390,7 @@ static int monitor_gluon_node_parse_ie(const uint8_t *ie, size_t ie_len, void *d
 		ret = -ENOMEM;
 	}
 	memcpy(node->information_elements, gluon_tlv, gluon_tlv_len);
+	node->information_elements_len = gluon_tlv_len;
 
 	/* Only parse node-id now */
 	ret = ieee80211_information_elements_iterate(gluon_tlv, gluon_tlv_len, &monitor_gluon_node_parse_tlv_node_id, node);
@@ -447,7 +451,7 @@ static int monitor_gluon_node_add(const char *bssid,
 
 	/* Validate basic information */
 	if (!node->information_elements) {
-		log_error("Node has no Gluon IE.");
+		log_debug("Node has no Gluon IE.");
 		ret = 0;
 		goto out_free;
 	}
@@ -542,6 +546,62 @@ out_free:
 	return 0;
 }
 
+int monitor_gluon_node_print_elements(const uint8_t *tlv, size_t tlv_len, void *data)
+{
+	struct gluon_beacon_information_source *information_source;
+	struct gluon_node *node = data;
+	char *ie_hex;
+	int ret;
+	int i;
+
+	ie_hex = malloc(tlv_len * 2 + 1);
+	if (!ie_hex) {
+		log_error("Failed to allocate memory for IE buffer.");
+		return -ENOMEM;
+	}
+
+	gd_buffer_to_hexstring(tlv, tlv_len, ie_hex);
+	log_debug("Find parsing method ie=%s len=%d", ie_hex, tlv_len);
+	free(ie_hex);
+
+	/* Get print method for IE */
+	for (i = 0; information_sources[i].name; i++) {
+		information_source = &information_sources[i];
+		log_debug("Check information source for type=%d name=%s", information_source->type, information_source->name);
+		if (information_source->type == tlv[0]) {
+			log_debug("Found information source for type=%d name=%s", tlv[0], information_source->name);
+			ret = information_source->parse(tlv, tlv_len);
+			if (ret) {
+				log_error("Failed to parse information element. ret=%d", ret);
+				return ret;
+			}
+		}
+	}
+
+	return 0;
+}
+
+int monitor_print_information(struct scanned_gluon_nodes *nodes)
+{
+	struct gluon_node *node;
+	int ret;
+
+	log_debug("Printing information for %d nodes.", nodes->len);
+
+
+	for (size_t i = 0; i < nodes->len; i++) {
+		node = &nodes->nodes[i];
+		/* Print Node-ID */
+		printf("Node-ID: %02x:%02x:%02x:%02x:%02x:%02x\n",
+		       node->node_id[0], node->node_id[1], node->node_id[2],
+		       node->node_id[3], node->node_id[4], node->node_id[5]);
+
+		/* Print Information Elements */
+		ret = ieee80211_information_elements_iterate(node->information_elements, node->information_elements_len, monitor_gluon_node_print_elements, node);
+	}
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	struct nl80211_sock wifi;
@@ -569,6 +629,8 @@ int main(int argc, char *argv[])
 	log_debug("Get scan results");
 	nl80211_get_scan_results(&wifi, ifindex);
 
+	/* Print node information */
+	monitor_print_information(&scanned_nodes);
 out_free:
 	for (size_t i = 0; i < scanned_nodes.len; i++) {
 		free(scanned_nodes.nodes[i].information_elements);
