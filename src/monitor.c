@@ -414,6 +414,7 @@ static int monitor_gluon_node_add(const char *bssid,
 	struct gluon_node *node;
 	char mac_addr_string[20];
 	char *ie_hex;
+	size_t i;
 	int ret;
 
 	/* Format MAC-address */
@@ -454,6 +455,15 @@ static int monitor_gluon_node_add(const char *bssid,
 		log_debug("Node has no Gluon IE.");
 		ret = 0;
 		goto out_free;
+	}
+
+	/* Check if node_id was already seen on a prior node in the list */
+	for (i = 0; i < scanned_nodes.len; i++) {
+		if (memcmp(node->node_id, scanned_nodes.nodes[i].node_id, 6) == 0) {
+			log_debug("Node-ID was already seen on a prior node.");
+			ret = 0;
+			goto out_free;
+		}
 	}
 
 	if (!node->node_id[0] && !node->node_id[1] && !node->node_id[2] && !node->node_id[3] && !node->node_id[4] && !node->node_id[5]) {
