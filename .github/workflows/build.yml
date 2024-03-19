@@ -16,6 +16,15 @@ jobs:
           - "main"
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: freifunk-gluon/gluon
+          path: gluon
+          ref: 2689bcddc34f7e17b98844d87f5d96cc3414d50b
+      - name: Move gluon packages
+        run: mv gluon/package .
+      - name: Remove Gluon
+        run: rm -rf gluon
       - name: Build
         uses: openwrt/gh-action-sdk@v7
         env:
