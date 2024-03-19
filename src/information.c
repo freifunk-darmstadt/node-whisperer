@@ -4,6 +4,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <stddef.h>
+
+#include <linux/unistd.h>
+#include <linux/kernel.h>
+
 #include "batadv.h"
 #include "util.h"
 #include "information.h"
@@ -85,6 +89,23 @@ int gluon_beacon_diagnostic_information_batman_adv_collect(uint8_t *buffer, size
 	return 3;
 }
 
+int gluon_beacon_diagnostic_information_uptime_collect(uint8_t *buffer, size_t buffer_size) {
+	struct sysinfo s_info;
+	uint32_t uptime_minutes;
+	int ret;
+
+	ret = sysinfo(&s_info);
+	if (ret) {
+		return -1;
+	}
+
+	uptime_minutes = htonl(s_info.uptime / 60);
+
+	memcpy(buffer, &uptime_minutes, sizeof(uptime_minutes));
+
+	return sizeof(uptime_minutes) / sizeof(uint8_t);
+}
+
 #else
 
 int gluon_beacon_diagnostic_information_hostname_parse(const uint8_t *buffer, size_t buffer_size) {
@@ -117,12 +138,24 @@ int gluon_beacon_diagnostic_information_batman_adv_parse(const uint8_t *buffer, 
 	return 0;
 }
 
+int gluon_beacon_diagnostic_information_uptime_parse(const uint8_t *buffer, size_t buffer_size) {
+	const uint8_t *ie_buf = &buffer[2];
+	uint8_t ie_len = buffer[1];
+	uint32_t uptime_minutes;
+
+	memcpy(&uptime_minutes, ie_buf, sizeof(uptime_minutes));
+	printf("Uptime: %d minutes\n", ntohl(uptime_minutes));
+
+	return 0;
+}
+
 #endif
 
 
 struct gluon_beacon_information_source information_sources[] = {
 	INFORMATION_SOURCE(hostname, 0),
 	INFORMATION_SOURCE(node_id, 1),
+	INFORMATION_SOURCE(uptime, 2),
 	INFORMATION_SOURCE(batman_adv, 20),
 	{},
 };
