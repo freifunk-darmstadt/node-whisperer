@@ -17,7 +17,7 @@ MAKE_PATH:=src
 define Package/gluon-diagnostic
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:=+libubox +libubus +libblobmsg-json +libnl-tiny
+  DEPENDS:=+libubox +libubus +libblobmsg-json +libnl-tiny +libbatadv
   TITLE:=Daemon for Gluon diagnostic using 802.11 beacon frames
 endef
 

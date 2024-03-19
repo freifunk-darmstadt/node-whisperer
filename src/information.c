@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stddef.h>
+#include "batadv.h"
 #include "util.h"
 #include "information.h"
 
@@ -64,6 +65,26 @@ int gluon_beacon_diagnostic_information_node_id_collect(uint8_t *buffer, size_t 
 	return 6;
 }
 
+int gluon_beacon_diagnostic_information_batman_adv_collect(uint8_t *buffer, size_t buffer_size) {
+	struct gluon_diagnostic_batadv_neighbor_stats stats = {};
+	int ret;
+
+	if (buffer_size < 3) {
+		return -1;
+	}
+
+	ret = gluon_diagnostic_get_batadv_neighbor_stats(&stats);
+	if (ret)
+		return -1;
+	
+
+	buffer[0] = stats.vpn.connected ? 1 : 0;
+	buffer[1] = stats.vpn.tq;
+	buffer[2] = stats.neighbor_count;
+
+	return 3;
+}
+
 #else
 
 int gluon_beacon_diagnostic_information_hostname_parse(const uint8_t *buffer, size_t buffer_size) {
@@ -85,11 +106,23 @@ int gluon_beacon_diagnostic_information_node_id_parse(const uint8_t *buffer, siz
 	return 0;
 }
 
+int gluon_beacon_diagnostic_information_batman_adv_parse(const uint8_t *buffer, size_t buffer_size) {
+	const uint8_t *ie_buf = &buffer[2];
+	uint8_t ie_len = buffer[1];
+	
+	printf("VPN connected: %s\n", ie_buf[0] ? "Yes" : "No");
+	printf("VPN-TQ: %d\n", ie_buf[1]);
+	printf("Neighbor count: %d\n", ie_buf[2]);
+
+	return 0;
+}
+
 #endif
 
 
 struct gluon_beacon_information_source information_sources[] = {
 	INFORMATION_SOURCE(hostname, 0),
 	INFORMATION_SOURCE(node_id, 1),
+	INFORMATION_SOURCE(batman_adv, 20),
 	{},
 };
