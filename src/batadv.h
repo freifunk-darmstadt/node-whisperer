@@ -1,7 +1,10 @@
 #pragma once
 
+#include <stdint.h>
+
 struct gluon_diagnostic_batadv_neighbor_stats {
-	int originator_count;
+	uint16_t originator_count;
+	uint16_t neighbor_count;
 	struct {
 		int connected;
 		int tq;

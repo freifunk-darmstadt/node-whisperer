@@ -39,6 +39,7 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 	char ifname[IF_NAMESIZE];
 	uint32_t hardif;
 	uint8_t tq;
+	char *orig, *dest;
 
 	opts = batadv_container_of(query_opts, struct neigh_netlink_opts,
 				   query_opts);
@@ -60,13 +61,21 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 		return NL_OK;
 	
 	hardif = nla_get_u32(attrs[BATADV_ATTR_HARD_IFINDEX]);
+	orig = nla_data(attrs[BATADV_ATTR_ORIG_ADDRESS]);
+	dest = nla_data(attrs[BATADV_ATTR_NEIGH_ADDRESS]);
 
 	if (if_indextoname(hardif, ifname) == NULL)
 		return NL_OK;
 
 	opts->stats->originator_count++;
-	opts->stats->vpn.tq = nla_get_u8(attrs[BATADV_ATTR_TQ]);
-	opts->stats->vpn.connected = !!strncmp(ifname, "mesh-vpn", strlen(ifname));
+	if (memcmp(orig, dest, 6) != 0)
+		return NL_OK;
+
+	opts->stats->neighbor_count++;
+	if (!strncmp(ifname, "mesh-vpn", strlen(ifname))) {
+		opts->stats->vpn.tq = nla_get_u8(attrs[BATADV_ATTR_TQ]);
+		opts->stats->vpn.connected = 1;
+	}
 
 	return NL_OK;
 }

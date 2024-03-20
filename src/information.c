@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stddef.h>
 
+#include <arpa/inet.h>
 #include <linux/unistd.h>
 #include <linux/kernel.h>
 
@@ -71,6 +72,7 @@ int gluon_beacon_diagnostic_information_node_id_collect(uint8_t *buffer, size_t 
 
 int gluon_beacon_diagnostic_information_batman_adv_collect(uint8_t *buffer, size_t buffer_size) {
 	struct gluon_diagnostic_batadv_neighbor_stats stats = {};
+	uint16_t tmp;
 	int ret;
 
 	if (buffer_size < 3) {
@@ -84,9 +86,14 @@ int gluon_beacon_diagnostic_information_batman_adv_collect(uint8_t *buffer, size
 
 	buffer[0] = stats.vpn.connected ? 1 : 0;
 	buffer[1] = stats.vpn.tq;
-	buffer[2] = stats.originator_count;
 
-	return 3;
+	tmp = htons(stats.originator_count);
+	memcpy(&buffer[2], &tmp, sizeof(tmp));
+
+	tmp = htons(stats.neighbor_count);
+	memcpy(&buffer[4], &tmp, sizeof(tmp));
+
+	return 6;
 }
 
 int gluon_beacon_diagnostic_information_uptime_collect(uint8_t *buffer, size_t buffer_size) {
@@ -130,10 +137,14 @@ int gluon_beacon_diagnostic_information_node_id_parse(const uint8_t *buffer, siz
 int gluon_beacon_diagnostic_information_batman_adv_parse(const uint8_t *buffer, size_t buffer_size) {
 	const uint8_t *ie_buf = &buffer[2];
 	uint8_t ie_len = buffer[1];
+	uint16_t *tmp;
 	
 	printf("VPN connected: %s\n", ie_buf[0] ? "Yes" : "No");
 	printf("VPN-TQ: %d\n", ie_buf[1]);
-	printf("Neighbor count: %d\n", ie_buf[2]);
+	tmp = (uint16_t *)&ie_buf[2];
+	printf("Originator count: %d\n", ntohs(*tmp));
+	tmp = (uint16_t *)&ie_buf[4];
+	printf("Neighbor count: %d\n", ntohs(*tmp));
 
 	return 0;
 }
