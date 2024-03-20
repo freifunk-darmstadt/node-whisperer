@@ -337,7 +337,7 @@ static int monitor_gluon_node_parse_tlv_node_id(const uint8_t *tlv, size_t tlv_l
 		return 0;
 	}
 
-	if (tlv_len != 8) {
+	if (tlv[1] != 6) {
 		log_error("TLV has invalid length for node-id.");
 		return -EINVAL;
 	}
