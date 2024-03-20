@@ -16,7 +16,7 @@
 #include "batadv.h"
 
 struct neigh_netlink_opts {
-	int neighbor_count;
+	int originator_count;
 	struct batadv_nlquery_opts query_opts;
 	struct gluon_diagnostic_batadv_neighbor_stats *stats;
 };
@@ -64,7 +64,7 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 	if (if_indextoname(hardif, ifname) == NULL)
 		return NL_OK;
 
-	opts->stats->neighbor_count++;
+	opts->stats->originator_count++;
 	opts->stats->vpn.tq = nla_get_u8(attrs[BATADV_ATTR_TQ]);
 	opts->stats->vpn.connected = !!strncmp(ifname, "mesh-vpn", strlen(ifname));
 

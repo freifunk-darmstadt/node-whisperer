@@ -84,7 +84,7 @@ int gluon_beacon_diagnostic_information_batman_adv_collect(uint8_t *buffer, size
 
 	buffer[0] = stats.vpn.connected ? 1 : 0;
 	buffer[1] = stats.vpn.tq;
-	buffer[2] = stats.neighbor_count;
+	buffer[2] = stats.originator_count;
 
 	return 3;
 }
