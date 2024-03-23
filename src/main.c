@@ -60,9 +60,10 @@ int create_vendor_element_buf() {
 	
 	/* Loop through all information-sources */
 	for (int i = 0; information_sources[i].name; i++) {
+		log_debug("Collecting information id=%d name=%s\n", information_sources[i].type, information_sources[i].name);
 		/* Check if we have space for T + L + {data} */
 		if (gbi.output.len + 3 > gbi.output.size) {
-			log_error("Buffer too small for id=%d name=%s", i, information_sources[i].name);
+			log_error("Buffer too small for id=%d name=%s", information_sources[i].type, information_sources[i].name);
 			break;
 		}
 
@@ -77,15 +78,15 @@ int create_vendor_element_buf() {
 		int ret = information_sources[i].collect(&gbi.output.buf[gbi.output.len + 2], gbi.output.size - gbi.output.len - 2);
 		if (ret == 0) {
 			/* No Information available */
-			log_error("No Information available for id=%d name=%s", i, information_sources[i].name);
+			log_error("No Information available for id=%d name=%s", information_sources[i].type, information_sources[i].name);
 			continue;
 		} else if (ret > 0xff) {
 			/* Too much Information */
-			log_error("Too much Information for id=%d name=%s", i, information_sources[i].name);
+			log_error("Too much Information for id=%d name=%s", information_sources[i].type, information_sources[i].name);
 			return -ENOMEM;
 		} else if (ret < 0) {
 			/* Error */
-			log_error("Error collecting Information for id=%d name=%s code=%d", i, information_sources[i].name, ret);
+			log_error("Error collecting Information for id=%d name=%s code=%d", information_sources[i].type, information_sources[i].name, ret);
 			continue;
 		}
 
@@ -95,7 +96,7 @@ int create_vendor_element_buf() {
 		/* Update total Length */
 		gbi.output.len += ret + 2;
 
-		log_debug("Add Element to beacon id=%d name=%s element_length=%d total_length=%d\n", i, information_sources[i].name, ret, gbi.output.len);
+		log_debug("Add Element to beacon id=%d name=%s element_length=%d total_length=%d\n", information_sources[i].type, information_sources[i].name, ret, gbi.output.len);
 	}
 
 	/* Set Length */
