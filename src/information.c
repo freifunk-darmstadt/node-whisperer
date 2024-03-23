@@ -14,6 +14,12 @@
 #include "information.h"
 
 #ifndef BUILD_MONITOR
+#include <uci.h>
+#include <json-c/json.h>
+#include <libgluonutil.h>
+#endif
+
+#ifndef BUILD_MONITOR
 #define INFORMATION_SOURCE(__name, __type) \
 	{ \
 		.name = #__name, \
@@ -113,6 +119,72 @@ int gluon_beacon_diagnostic_information_uptime_collect(uint8_t *buffer, size_t b
 	return sizeof(uptime_minutes) / sizeof(uint8_t);
 }
 
+int gluon_beacon_diagnostic_information_site_code_collect(uint8_t *buffer, size_t buffer_size) {
+	struct json_object *site;
+	struct json_object *site_code_j;
+	const char *site_code = NULL;
+	size_t sice_code_len;
+	int ret;
+
+	site = gluonutil_load_site_config();
+	if (!site) {
+		ret = -1;
+		goto out_free;
+	}
+
+	site_code_j = json_object_object_get(site, "site_code");
+	if (!site_code_j) {
+		ret = -1;
+		goto out_free;
+	}
+
+	site_code = json_object_get_string(site_code_j);
+	if (!site_code) {
+		ret = -1;
+		goto out_free;
+	}
+
+	sice_code_len = strlen(site_code);
+	if (sice_code_len > buffer_size) {
+		ret = -1;
+		goto out_free;
+	}
+
+	memcpy(buffer, site_code, sice_code_len);
+	ret = sice_code_len;
+
+out_free:
+	if (site)
+		json_object_put(site);
+	return ret;
+}
+
+int gluon_beacon_diagnostic_information_domain_collect(uint8_t *buffer, size_t buffer_size) {
+	char *dom;
+	size_t dom_len;
+	int ret;
+
+	dom = gluonutil_get_domain();
+	if (!dom) {
+		ret = -1;
+		goto out_free;
+	}
+
+	dom_len = strlen(dom);
+	if (dom_len > buffer_size) {
+		ret = -1;
+		goto out_free;
+	}
+
+	memcpy(buffer, dom, dom_len);
+	ret = dom_len;
+
+out_free:
+	if (dom)
+		free(dom);
+	return ret;
+}
+
 #else
 
 int gluon_beacon_diagnostic_information_hostname_parse(const uint8_t *buffer, size_t buffer_size) {
@@ -160,6 +232,42 @@ int gluon_beacon_diagnostic_information_uptime_parse(const uint8_t *buffer, size
 	return 0;
 }
 
+int gluon_beacon_diagnostic_information_site_code_parse(const uint8_t *buffer, size_t buffer_size) {
+	const uint8_t *ie_buf = &buffer[2];
+	uint8_t ie_len = buffer[1];
+	char *tmp;
+
+	tmp = malloc(ie_len + 1);
+	if (!tmp)
+		return -1;
+
+	memcpy(tmp, ie_buf, ie_len);
+	tmp[ie_len] = '\0';
+
+	printf("Site code: %s\n", tmp);
+	free(tmp);
+
+	return 0;
+}
+
+int gluon_beacon_diagnostic_information_domain_parse(const uint8_t *buffer, size_t buffer_size) {
+	const uint8_t *ie_buf = &buffer[2];
+	uint8_t ie_len = buffer[1];
+	char *tmp;
+
+	tmp = malloc(ie_len + 1);
+	if (!tmp)
+		return -1;
+	
+	memcpy(tmp, ie_buf, ie_len);
+	tmp[ie_len] = '\0';
+
+	printf("Domain: %s\n", tmp);
+	free(tmp);
+
+	return 0;
+}
+
 #endif
 
 
@@ -167,6 +275,8 @@ struct gluon_beacon_information_source information_sources[] = {
 	INFORMATION_SOURCE(hostname, 0),
 	INFORMATION_SOURCE(node_id, 1),
 	INFORMATION_SOURCE(uptime, 2),
+	INFORMATION_SOURCE(site_code, 3),
+	INFORMATION_SOURCE(domain, 4),
 	INFORMATION_SOURCE(batman_adv, 20),
 	{},
 };
