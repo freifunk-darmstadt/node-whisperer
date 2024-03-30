@@ -1,9 +1,9 @@
-#include "gluon-diagnostic.h"
+#include "node-whisperer.h"
 
-static LIST_HEAD(gluon_diagnostic_interfaces);
+static LIST_HEAD(nw_interfaces);
 static struct blob_buf b;
 
-static int gluon_diagnostic_interface_handle_event(struct ubus_context *ctx,
+static int nw_interface_handle_event(struct ubus_context *ctx,
 						   struct ubus_object *obj,
 						   struct ubus_request_data *req,
 						   const char *method,
@@ -13,22 +13,22 @@ static int gluon_diagnostic_interface_handle_event(struct ubus_context *ctx,
 	return 0;
 }
 
-static void gluon_diagnostic_interface_handle_remove(struct ubus_context *ctx,
+static void nw_interface_handle_remove(struct ubus_context *ctx,
 						     struct ubus_subscriber *s,
 						     uint32_t id)
 {
-	struct gluon_diagnostic_interface *iface;
-	iface = container_of(s, struct gluon_diagnostic_interface, ubus.subscriber);
+	struct nw_interface *iface;
+	iface = container_of(s, struct nw_interface, ubus.subscriber);
 
-	gluon_diagnostic_interface_remove(ctx, iface);
+	nw_interface_remove(ctx, iface);
 }
 
-int gluon_diagnostic_interface_update(struct ubus_context *ctx, char *vendor_elements)
+int nw_interface_update(struct ubus_context *ctx, char *vendor_elements)
 {
-	struct gluon_diagnostic_interface *iface;
+	struct nw_interface *iface;
 	int ret;
 
-	list_for_each_entry(iface, &gluon_diagnostic_interfaces, list) {
+	list_for_each_entry(iface, &nw_interfaces, list) {
 		blob_buf_init(&b, 0);
 		blobmsg_add_string(&b, "vendor_elements", vendor_elements);
 
@@ -50,8 +50,8 @@ int gluon_diagnostic_interface_update(struct ubus_context *ctx, char *vendor_ele
 	return 0;
 }
 
-int gluon_diagnostic_interface_remove(struct ubus_context *ctx,
-				      struct gluon_diagnostic_interface *iface)
+int nw_interface_remove(struct ubus_context *ctx,
+				      struct nw_interface *iface)
 {
 	log_info("Removing interface %s", iface->ubus.name);
 
@@ -62,9 +62,9 @@ int gluon_diagnostic_interface_remove(struct ubus_context *ctx,
 	return 0;
 }
 
-int gluon_diagnostic_interface_add(struct ubus_context *ctx, int id, const char *name)
+int nw_interface_add(struct ubus_context *ctx, int id, const char *name)
 {
-	struct gluon_diagnostic_interface *iface;
+	struct nw_interface *iface;
 
 	iface = calloc(sizeof(*iface), 1);
 	if (!iface) {
@@ -82,11 +82,11 @@ int gluon_diagnostic_interface_add(struct ubus_context *ctx, int id, const char 
 
 	/* Add to node-list */
 	INIT_LIST_HEAD(&iface->list);
-	list_add(&iface->list, &gluon_diagnostic_interfaces);
+	list_add(&iface->list, &nw_interfaces);
 
 	/* Subscribe to node removal */
-	iface->ubus.subscriber.cb = gluon_diagnostic_interface_handle_event;
-	iface->ubus.subscriber.remove_cb = gluon_diagnostic_interface_handle_remove;
+	iface->ubus.subscriber.cb = nw_interface_handle_event;
+	iface->ubus.subscriber.remove_cb = nw_interface_handle_remove;
 	ubus_register_subscriber(ctx, &iface->ubus.subscriber);
 
 	log_info("Registered interface %s", iface->ubus.name);

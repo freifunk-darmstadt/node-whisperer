@@ -18,7 +18,7 @@
 struct neigh_netlink_opts {
 	int originator_count;
 	struct batadv_nlquery_opts query_opts;
-	struct gluon_diagnostic_batadv_neighbor_stats *stats;
+	struct nw_batadv_neighbor_stats *stats;
 };
 
 struct clients_netlink_opts {
@@ -90,7 +90,7 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 	return NL_OK;
 }
 
-int gluon_diagnostic_get_batadv_neighbor_stats(struct gluon_diagnostic_batadv_neighbor_stats *stats) {
+int nw_get_batadv_neighbor_stats(struct nw_batadv_neighbor_stats *stats) {
 	struct neigh_netlink_opts opts = {
 		.query_opts = {
 			.err = 0,
@@ -152,7 +152,7 @@ static int parse_clients_list_netlink_cb(struct nl_msg *msg, void *arg)
 	return NL_OK;
 }
 
-int gluon_diagnostic_get_batadv_clients() {
+int nw_get_batadv_clients() {
 	struct clients_netlink_opts opts = {
 		.clients = 0,
 		.query_opts = {

@@ -24,19 +24,19 @@
 	{ \
 		.name = #__name, \
 		.type = __type, \
-		.collect = gluon_beacon_diagnostic_information_##__name##_collect, \
+		.collect = node_whisperer_information_##__name##_collect, \
 	}
 #else
 #define INFORMATION_SOURCE(__name, __type) \
 	{ \
 		.name = #__name, \
 		.type = __type, \
-		.parse = gluon_beacon_diagnostic_information_##__name##_parse, \
+		.parse = node_whisperer_information_##__name##_parse, \
 	}
 #endif
 
 #ifndef BUILD_MONITOR
-int gluon_beacon_diagnostic_information_hostname_collect(uint8_t *buffer, size_t buffer_size) {
+int node_whisperer_information_hostname_collect(uint8_t *buffer, size_t buffer_size) {
 	int ret;
 
 	ret = gethostname((char *)buffer, buffer_size);
@@ -47,7 +47,7 @@ int gluon_beacon_diagnostic_information_hostname_collect(uint8_t *buffer, size_t
 	return strlen((char *)buffer);
 }
 
-int gluon_beacon_diagnostic_information_node_id_collect(uint8_t *buffer, size_t buffer_size) {
+int node_whisperer_information_node_id_collect(uint8_t *buffer, size_t buffer_size) {
 	char *node_id_ascii;
 	size_t node_id_ascii_len;
 	int ret;
@@ -57,7 +57,7 @@ int gluon_beacon_diagnostic_information_node_id_collect(uint8_t *buffer, size_t 
 		return -1;
 	}
 
-	ret = gd_read_file("/lib/gluon/core/sysconfig/primary_mac", &node_id_ascii, &node_id_ascii_len);
+	ret = nw_read_file("/lib/gluon/core/sysconfig/primary_mac", &node_id_ascii, &node_id_ascii_len);
 	if (ret) {
 		return ret;
 	}
@@ -67,7 +67,7 @@ int gluon_beacon_diagnostic_information_node_id_collect(uint8_t *buffer, size_t 
 		return -1;
 	}
 
-	ret = gd_parse_mac_address_ascii(node_id_ascii, buffer);
+	ret = nw_parse_mac_address_ascii(node_id_ascii, buffer);
 	free(node_id_ascii);
 	if (ret < 0) {
 		return -1;
@@ -76,8 +76,8 @@ int gluon_beacon_diagnostic_information_node_id_collect(uint8_t *buffer, size_t 
 	return 6;
 }
 
-int gluon_beacon_diagnostic_information_batman_adv_collect(uint8_t *buffer, size_t buffer_size) {
-	struct gluon_diagnostic_batadv_neighbor_stats stats = {};
+int node_whisperer_information_batman_adv_collect(uint8_t *buffer, size_t buffer_size) {
+	struct nw_batadv_neighbor_stats stats = {};
 	uint16_t tmp;
 	uint16_t num_clients;
 	int ret;
@@ -86,11 +86,11 @@ int gluon_beacon_diagnostic_information_batman_adv_collect(uint8_t *buffer, size
 		return -1;
 	}
 
-	ret = gluon_diagnostic_get_batadv_neighbor_stats(&stats);
+	ret = nw_get_batadv_neighbor_stats(&stats);
 	if (ret)
 		return -1;
 	
-	ret = gluon_diagnostic_get_batadv_clients();
+	ret = nw_get_batadv_clients();
 	if (ret < 0) {
 		num_clients = 0;
 	} else {
@@ -112,7 +112,7 @@ int gluon_beacon_diagnostic_information_batman_adv_collect(uint8_t *buffer, size
 	return 6;
 }
 
-int gluon_beacon_diagnostic_information_uptime_collect(uint8_t *buffer, size_t buffer_size) {
+int node_whisperer_information_uptime_collect(uint8_t *buffer, size_t buffer_size) {
 	struct sysinfo s_info;
 	uint32_t uptime_minutes;
 	int ret;
@@ -129,7 +129,7 @@ int gluon_beacon_diagnostic_information_uptime_collect(uint8_t *buffer, size_t b
 	return sizeof(uptime_minutes) / sizeof(uint8_t);
 }
 
-int gluon_beacon_diagnostic_information_site_code_collect(uint8_t *buffer, size_t buffer_size) {
+int node_whisperer_information_site_code_collect(uint8_t *buffer, size_t buffer_size) {
 	struct json_object *site;
 	struct json_object *site_code_j;
 	const char *site_code = NULL;
@@ -169,7 +169,7 @@ out_free:
 	return ret;
 }
 
-int gluon_beacon_diagnostic_information_domain_collect(uint8_t *buffer, size_t buffer_size) {
+int node_whisperer_information_domain_collect(uint8_t *buffer, size_t buffer_size) {
 	char *dom;
 	size_t dom_len;
 	int ret;
@@ -197,7 +197,7 @@ out_free:
 
 #else
 
-int gluon_beacon_diagnostic_information_hostname_parse(const uint8_t *ie_buf, size_t ie_len) {
+int node_whisperer_information_hostname_parse(const uint8_t *ie_buf, size_t ie_len) {
 	char hostname[255] = {};
 
 	memcpy(hostname, ie_buf, ie_len);
@@ -205,13 +205,13 @@ int gluon_beacon_diagnostic_information_hostname_parse(const uint8_t *ie_buf, si
 	return 0;
 }
 
-int gluon_beacon_diagnostic_information_node_id_parse(const uint8_t *ie_buf, size_t ie_len) {	
+int node_whisperer_information_node_id_parse(const uint8_t *ie_buf, size_t ie_len) {	
 	/* We Print Node-ID on top */
 
 	return 0;
 }
 
-int gluon_beacon_diagnostic_information_batman_adv_parse(const uint8_t *ie_buf, size_t ie_len) {
+int node_whisperer_information_batman_adv_parse(const uint8_t *ie_buf, size_t ie_len) {
 	uint16_t *tmp;
 
 	if (ie_len < 8)
@@ -229,7 +229,7 @@ int gluon_beacon_diagnostic_information_batman_adv_parse(const uint8_t *ie_buf, 
 	return 0;
 }
 
-int gluon_beacon_diagnostic_information_uptime_parse(const uint8_t *ie_buf, size_t ie_len) {
+int node_whisperer_information_uptime_parse(const uint8_t *ie_buf, size_t ie_len) {
 	uint32_t uptime_minutes;
 	uint16_t days;
 	uint8_t hours, minutes;
@@ -248,7 +248,7 @@ int gluon_beacon_diagnostic_information_uptime_parse(const uint8_t *ie_buf, size
 	return 0;
 }
 
-int gluon_beacon_diagnostic_information_site_code_parse(const uint8_t *ie_buf, size_t ie_len) {
+int node_whisperer_information_site_code_parse(const uint8_t *ie_buf, size_t ie_len) {
 	char *tmp;
 
 	tmp = malloc(ie_len + 1);
@@ -264,7 +264,7 @@ int gluon_beacon_diagnostic_information_site_code_parse(const uint8_t *ie_buf, s
 	return 0;
 }
 
-int gluon_beacon_diagnostic_information_domain_parse(const uint8_t *ie_buf, size_t ie_len) {
+int node_whisperer_information_domain_parse(const uint8_t *ie_buf, size_t ie_len) {
 	char *tmp;
 
 	tmp = malloc(ie_len + 1);
@@ -283,7 +283,7 @@ int gluon_beacon_diagnostic_information_domain_parse(const uint8_t *ie_buf, size
 #endif
 
 
-struct gluon_beacon_information_source information_sources[] = {
+struct nw_information_source information_sources[] = {
 	INFORMATION_SOURCE(hostname, 0),
 	INFORMATION_SOURCE(node_id, 1),
 	INFORMATION_SOURCE(uptime, 2),

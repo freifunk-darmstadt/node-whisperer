@@ -4,7 +4,7 @@
 START=95
 USE_PROCD=1
 
-NAME=gluon-diagnostic
+NAME=node-whisperer
 PROG=/usr/bin/gluon-diagnostic
 
 . /lib/functions.sh
@@ -14,12 +14,12 @@ reload_service() {
 }
 
 service_triggers() {
-	procd_add_reload_trigger gluon-diagnostic
+	procd_add_reload_trigger node-whisperer
 }
 
 start_service()
 {
-	ENABLED="$(uci -q get gluon-diagnostic.settings.enabled)"
+	ENABLED="$(uci -q get node-whisperer.settings.enabled)"
 	ENABLED="${ENABLED:-1}"
 
 	[ "$ENABLED" -gt 0 ] || return

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "gluon-diagnostic.h"
+#include "node-whisperer.h"
 
-struct gluon_diagnostic {
+struct nw {
 	struct ubus_context *ubus_ctx;
 	struct uloop_timeout update_timeout;
 };

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "gluon-diagnostic.h"
+#include "node-whisperer.h"
 
-struct gluon_diagnostic_interface {
+struct nw_interface {
 	struct list_head list;
 
 	struct {
@@ -12,9 +12,9 @@ struct gluon_diagnostic_interface {
 	} ubus;
 };
 
-int gluon_diagnostic_interface_update(struct ubus_context *ctx, char *vendor_elements);
+int nw_interface_update(struct ubus_context *ctx, char *vendor_elements);
 
-int gluon_diagnostic_interface_remove(struct ubus_context *ctx,
-				      struct gluon_diagnostic_interface *iface);
+int nw_interface_remove(struct ubus_context *ctx,
+				      struct nw_interface *iface);
 
-int gluon_diagnostic_interface_add(struct ubus_context *ctx, int id, const char *name);
+int nw_interface_add(struct ubus_context *ctx, int id, const char *name);

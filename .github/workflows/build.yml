@@ -30,7 +30,7 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.version }}
           FEEDNAME: packages_ci
-          PACKAGES: "gluon-diagnostic"
+          PACKAGES: "node-whisperer"
           KEY_BUILD: "RWRCSwAAAADDDX5uZK8x5UDT1RoVpOmbik/2kEoWm9q08QB6E0im50hNLwPpOfKCFURVvNR0iDGePQm5pnrZKX3OYyfsbv9G6eGsrlozbXFnGJXI3Szjb/Th7Uhd7mLSIh0wLyjIYEI="
           V: s
       - name: Store packages

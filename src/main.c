@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <stddef.h>
 
-#include "gluon-diagnostic.h"
+#include "node-whisperer.h"
 #include "daemon.h"
 
 #define UPDATE_INTERVAL (30 * 1000)
@@ -13,7 +13,7 @@
 #define HOSTNAME_PATH "/home/dbauer/test"
 #define BEACON_BUFFER_SIZE 512
 
-struct gluon_beacon_information {
+struct nw_information {
 	struct {
 		uint8_t *buf;
 		size_t len;  /* Content Length*/
@@ -24,8 +24,8 @@ struct gluon_beacon_information {
 struct ubus_context *ubus_ctx;
 
 
-struct gluon_beacon_information gbi = {};
-extern struct gluon_beacon_information_source information_sources[];
+struct nw_information gbi = {};
+extern struct nw_information_source information_sources[];
 
 int create_vendor_element_buf() {
 	uint8_t *element_length;
@@ -114,7 +114,7 @@ int buffer_to_hexstring(uint8_t *buf, size_t len, uint8_t *hexstring) {
 }
 
 static void collect_information(struct uloop_timeout *timeout) {
-	struct gluon_diagnostic *instance = container_of(timeout, struct gluon_diagnostic, update_timeout);
+	struct nw *instance = container_of(timeout, struct nw, update_timeout);
 	if (create_vendor_element_buf() < 0) {
 		goto out_free;
 	}
@@ -127,7 +127,7 @@ static void collect_information(struct uloop_timeout *timeout) {
 
 	/* Update nodes */
 	log_debug("Update %s", buf_hex);
-	gluon_diagnostic_interface_update(instance->ubus_ctx, (char *)buf_hex);
+	nw_interface_update(instance->ubus_ctx, (char *)buf_hex);
 
 out_free:
 	free(buf_hex);
@@ -135,7 +135,7 @@ out_free:
 }
 
 static int start_daemon() {
-	struct gluon_diagnostic instance;
+	struct nw instance;
 
 	uloop_init();
 
@@ -147,7 +147,7 @@ static int start_daemon() {
 
 	/* Init ubus */
 	ubus_add_uloop(instance.ubus_ctx);
-	gluon_diagnostic_ubus_init(instance.ubus_ctx);
+	nw_ubus_init(instance.ubus_ctx);
 
 	/* Add Information gathering timer */
 	instance.update_timeout.cb = collect_information;

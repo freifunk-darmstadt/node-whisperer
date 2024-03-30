@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-struct gluon_beacon_information_source {
+struct nw_information_source {
 	char *name;
 	uint8_t type;
 	uint32_t fixed_size;

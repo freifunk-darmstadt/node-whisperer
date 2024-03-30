@@ -1,0 +1,9 @@
+
+config node-whisperer 'node-whisperer'
+	option enabled '1'
+	list information 'node_id'
+	list information 'hostname'
+	list information 'uptime'
+	list information 'site_code'
+	list information 'domain'
+	list information 'batman_adv'

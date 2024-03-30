@@ -1,20 +1,20 @@
-#include "gluon-diagnostic.h"
+#include "node-whisperer.h"
 
-static const struct ubus_method gluon_diagnostic_methods[] = {
+static const struct ubus_method nw_methods[] = {
 	/* Empty */
 };
 
-static struct ubus_object_type gluon_diagnostic_obj_type =
-	UBUS_OBJECT_TYPE("gluon_diagnostic", gluon_diagnostic_methods);
+static struct ubus_object_type nw_obj_type =
+	UBUS_OBJECT_TYPE("node_whisperer", nw_methods);
 
-struct ubus_object gluon_diagnostic_obj = {
-	.name = "gluon_diagnostic",
-	.type = &gluon_diagnostic_obj_type,
-	.methods = gluon_diagnostic_methods,
-	.n_methods = ARRAY_SIZE(gluon_diagnostic_methods),
+struct ubus_object nw_obj = {
+	.name = "node_whisperer",
+	.type = &nw_obj_type,
+	.methods = nw_methods,
+	.n_methods = ARRAY_SIZE(nw_methods),
 };
 
-static void gluon_diagnostic_ubus_event_handler(struct ubus_context *ctx,
+static void nw_ubus_event_handler(struct ubus_context *ctx,
 						struct ubus_event_handler *ev,
 						const char *type,
 						struct blob_attr *msg)
@@ -30,28 +30,28 @@ static void gluon_diagnostic_ubus_event_handler(struct ubus_context *ctx,
 	if (!tb[0] || !tb[1])
 		return;
 
-	gluon_diagnostic_interface_add(ctx, blobmsg_get_u32(tb[0]), blobmsg_data(tb[1]));
+	nw_interface_add(ctx, blobmsg_get_u32(tb[0]), blobmsg_data(tb[1]));
 }
 
-static void gluon_diagnostic_register_events(struct ubus_context *ctx)
+static void nw_register_events(struct ubus_context *ctx)
 {
 	static struct ubus_event_handler handler = {
-		.cb = gluon_diagnostic_ubus_event_handler
+		.cb = nw_ubus_event_handler
 	};
 
 	ubus_register_event_handler(ctx, &handler, "ubus.object.add");
 }
 
-static void gluon_diagnostic_ubus_list_cb(struct ubus_context *ctx,
+static void nw_ubus_list_cb(struct ubus_context *ctx,
 					  struct ubus_object_data *obj,
 					  void *priv)
 {
-	gluon_diagnostic_interface_add(ctx, obj->id, obj->path);
+	nw_interface_add(ctx, obj->id, obj->path);
 }
 
-void gluon_diagnostic_ubus_init(struct ubus_context *ctx)
+void nw_ubus_init(struct ubus_context *ctx)
 {
-	ubus_add_object(ctx, &gluon_diagnostic_obj);
-	gluon_diagnostic_register_events(ctx);
-	ubus_lookup(ctx, "hostapd.*", gluon_diagnostic_ubus_list_cb, NULL);
+	ubus_add_object(ctx, &nw_obj);
+	nw_register_events(ctx);
+	ubus_lookup(ctx, "hostapd.*", nw_ubus_list_cb, NULL);
 }

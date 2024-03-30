@@ -1,3 +1,0 @@
-
-config gluon-diagnostic 'gluon-diagnostic'
-	option enabled '1'

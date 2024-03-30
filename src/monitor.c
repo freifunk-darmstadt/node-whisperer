@@ -47,7 +47,7 @@ struct scanned_gluon_nodes {
 	size_t len;
 };
 
-extern struct gluon_beacon_information_source information_sources[];
+extern struct nw_information_source information_sources[];
 static struct scanned_gluon_nodes scanned_nodes;
 
 static int error_handler(struct sockaddr_nl *nla, struct nlmsgerr *err, void *arg)
@@ -418,7 +418,7 @@ static int monitor_gluon_node_add(const char *bssid,
 	int ret;
 
 	/* Format MAC-address */
-	gd_format_mac_address_string(bssid, mac_addr_string);
+	nw_format_mac_address_string(bssid, mac_addr_string);
 
 	/* Print IE buffer */
 	ie_hex = malloc(information_elements_len * 2 + 1);
@@ -427,7 +427,7 @@ static int monitor_gluon_node_add(const char *bssid,
 		return -ENOMEM;
 	}
 
-	gd_buffer_to_hexstring(information_elements, information_elements_len, ie_hex);
+	nw_buffer_to_hexstring(information_elements, information_elements_len, ie_hex);
 	log_debug("Processing scan-result bssid=%s ies=%s", mac_addr_string, ie_hex);
 	free(ie_hex);
 
@@ -558,7 +558,7 @@ out_free:
 
 int monitor_gluon_node_print_elements(const uint8_t *tlv, size_t tlv_len, void *data)
 {
-	struct gluon_beacon_information_source *information_source;
+	struct nw_information_source *information_source;
 	struct gluon_node *node = data;
 	char *ie_hex;
 	int ret;
@@ -570,7 +570,7 @@ int monitor_gluon_node_print_elements(const uint8_t *tlv, size_t tlv_len, void *
 		return -ENOMEM;
 	}
 
-	gd_buffer_to_hexstring(tlv, tlv_len, ie_hex);
+	nw_buffer_to_hexstring(tlv, tlv_len, ie_hex);
 	log_debug("Find parsing method ie=%s len=%d", ie_hex, tlv_len);
 	free(ie_hex);
 
