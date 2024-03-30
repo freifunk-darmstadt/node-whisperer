@@ -1,7 +1,97 @@
 #include "node-whisperer.h"
 
+extern struct nw_information_source information_sources[];
+
+static struct blob_buf b;
+
+static struct blobmsg_policy source_toggle_arg[] = {
+	{ .name = "information_sources", .type = BLOBMSG_TYPE_ARRAY, },
+};
+
+static struct nw_information_source *nw_information_source_get(const char *name)
+{
+	struct nw_information_source *source;
+
+	for (source = information_sources; source->name; source++) {
+		if (!strcmp(source->name, name))
+			return source;
+	}
+
+	return NULL;
+}
+
+static int nw_ubus_information_source_set(const char *name, bool enabled)
+{
+	struct nw_information_source *source;
+
+	source = nw_information_source_get(name);
+	if (!source)
+		return UBUS_STATUS_NOT_FOUND;
+
+	source->enabled = enabled;
+	return 0;
+}
+
+static int nw_ubus_enable_source(struct ubus_context *ctx, struct ubus_object *obj,
+				 struct ubus_request_data *req, const char *method,
+				 struct blob_attr *msg)
+{
+	struct blob_attr *source_name_blob, *cur;
+	struct nw_information_source *source;
+	char *source_name;
+	size_t rem;
+
+	blobmsg_parse(source_toggle_arg, 1, &source_name_blob, blob_data(msg), blob_len(msg));
+	if (!source_name_blob)
+		return UBUS_STATUS_INVALID_ARGUMENT;
+
+	/* Disable all information sources first */
+	for (source = information_sources; source->name; source++) {
+		source->enabled = false;
+	}
+
+	/* Iterate over all sources given */
+	blobmsg_for_each_attr(cur, source_name_blob, rem) {
+		if (blobmsg_type(cur) != BLOBMSG_TYPE_STRING)
+			return UBUS_STATUS_INVALID_ARGUMENT;
+
+		source_name = blobmsg_get_string(cur);
+		if (!source_name)
+			return UBUS_STATUS_INVALID_ARGUMENT;
+
+		nw_ubus_information_source_set(source_name, true);
+	}
+
+	return 0;
+}
+
+static int nw_ubus_get_sources(struct ubus_context *ctx, struct ubus_object *obj,
+			       struct ubus_request_data *req, const char *method,
+			       struct blob_attr *msg)
+{
+	struct nw_information_source *source;
+	void *t, *a;
+
+	blob_buf_init(&b, 0);
+
+	a = blobmsg_open_array(&b, "information_sources");
+	for (source = information_sources; source->name; source++) {
+		t = blobmsg_open_table(&b, "");
+		blobmsg_add_string(&b, "name", source->name);
+		blobmsg_add_u8(&b, "enabled", source->enabled);
+		blobmsg_close_table(&b, t);
+	}
+	blobmsg_close_array(&b, a);
+
+	ubus_send_reply(ctx, req, b.head);
+	blob_buf_free(&b);
+
+	return 0;
+}
+
 static const struct ubus_method nw_methods[] = {
-	/* Empty */
+	UBUS_METHOD("set_sources", nw_ubus_enable_source, source_toggle_arg),
+	UBUS_METHOD_NOARG("get_sources", nw_ubus_get_sources),
 };
 
 static struct ubus_object_type nw_obj_type =

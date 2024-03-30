@@ -59,8 +59,14 @@ int create_vendor_element_buf() {
 	/* Length now matches content. Make sure to update on each new information! */
 	
 	/* Loop through all information-sources */
-	for (int i = 0; information_sources[i].name; i++) {
-		log_debug("Collecting information id=%d name=%s", information_sources[i].type, information_sources[i].name);
+	for (int i = 0; information_sources[i].name; i++) {		
+		if (!information_sources[i].enabled) {
+			log_debug("Information source id=%d name=%s is disabled", information_sources[i].type, information_sources[i].name);
+			continue;
+		} else {
+			log_debug("Information source id=%d name=%s is enabled", information_sources[i].type, information_sources[i].name);
+		}
+
 		/* Check if we have space for T + L + {data} */
 		if (gbi.output.len + 3 > gbi.output.size) {
 			log_error("Buffer too small for id=%d name=%s", information_sources[i].type, information_sources[i].name);

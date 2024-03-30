@@ -1,5 +1,5 @@
 
-config node-whisperer 'node-whisperer'
+config node-whisperer 'core'
 	option enabled '1'
 	list information 'node_id'
 	list information 'hostname'
