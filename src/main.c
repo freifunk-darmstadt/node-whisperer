@@ -135,6 +135,8 @@ static void collect_information(struct uloop_timeout *timeout) {
 	log_debug("Update %s", buf_hex);
 	nw_interface_update(instance->ubus_ctx, (char *)buf_hex);
 
+	instance->statistics.update_count++;
+
 out_free:
 	free(buf_hex);
 	uloop_timeout_set(timeout, UPDATE_INTERVAL);

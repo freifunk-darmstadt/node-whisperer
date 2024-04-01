@@ -1,4 +1,5 @@
 #include "node-whisperer.h"
+#include "daemon.h"
 
 extern struct nw_information_source information_sources[];
 
@@ -89,9 +90,28 @@ static int nw_ubus_get_sources(struct ubus_context *ctx, struct ubus_object *obj
 	return 0;
 }
 
+static int nw_ubus_statistics(struct ubus_context *ctx, struct ubus_object *obj,
+			      struct ubus_request_data *req, const char *method,
+			      struct blob_attr *msg)
+{
+	struct nw *nw = container_of(ctx, struct nw, ubus_ctx);
+	struct nw_information_source *source;
+	void *t, *a;
+
+	blob_buf_init(&b, 0);
+
+	blobmsg_add_u64(&b, "update_count", nw->statistics.update_count);
+
+	ubus_send_reply(ctx, req, b.head);
+	blob_buf_free(&b);
+
+	return 0;
+}
+
 static const struct ubus_method nw_methods[] = {
 	UBUS_METHOD("set_sources", nw_ubus_enable_source, source_toggle_arg),
 	UBUS_METHOD_NOARG("get_sources", nw_ubus_get_sources),
+	UBUS_METHOD_NOARG("statistics", nw_ubus_statistics),
 };
 
 static struct ubus_object_type nw_obj_type =
