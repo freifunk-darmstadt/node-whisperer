@@ -32,7 +32,7 @@ LDFLAGS_MONITOR:=$(LDFLAGS_genl) -DBUILD_MONITOR
 CFLAGS_MONITOR:=$(CFLAGS_genl)
 
 all:
-	$(CC) $(CFLAGS) -D_GNU_SOURCE -o node-whisperer main.c util.c information.c log.c ubus.c interface.c batadv.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -D_GNU_SOURCE -o node-whisperer daemon.c util.c information.c log.c ubus.c interface.c batadv.c $(LDFLAGS)
 
 monitor:
 	$(CC) $(CFLAGS_MONITOR) -o monitor monitor.c log.c util.c ieee80211.c information.c $(LDFLAGS_MONITOR) 
