@@ -109,7 +109,7 @@ int node_whisperer_information_batman_adv_collect(uint8_t *buffer, size_t buffer
 	tmp = htons(num_clients);
 	memcpy(&buffer[6], &tmp, sizeof(tmp));
 
-	return 6;
+	return 8;
 }
 
 int node_whisperer_information_uptime_collect(uint8_t *buffer, size_t buffer_size) {
