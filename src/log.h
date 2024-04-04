@@ -1,14 +1,15 @@
 #pragma once
 
 enum log_level {
-    LOG_DEBUG,
-    LOG_INFO,
-    LOG_WARNING,
-    LOG_ERROR,
-    LOG_FATAL
+    LL_DEBUG = 5,
+    LL_INFO = 4,
+    LL_WARNING = 3,
+    LL_ERROR = 2,
+    LL_FATAL = 1,
 };
 
 void log_set_level(enum log_level level);
+void log_use_syslog(int use);
 
 void log_error(const char *fmt, ...);
 void log_info(const char *fmt, ...);

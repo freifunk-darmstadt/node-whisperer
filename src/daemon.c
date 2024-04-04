@@ -160,6 +160,22 @@ static int start_daemon() {
 }
 
 int main(int argc, char *argv[]) {
+	int opt;
+
+	while ((opt = getopt(argc, argv, "l:s")) != -1) {
+		switch (opt) {
+		case 'l':
+			log_set_level(atoi(optarg));
+			break;
+		case 's':
+			log_use_syslog(1);
+			break;
+		default:
+			fprintf(stderr, "Usage: %s [-l loglevel] [-s]\n", argv[0]);
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	start_daemon();
 	return 0;
 }

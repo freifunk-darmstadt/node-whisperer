@@ -1,6 +1,7 @@
 
-config node-whisperer 'core'
+config settings 'settings'
 	option enabled '1'
+	option log_level '3'
 	list information 'node_id'
 	list information 'hostname'
 	list information 'uptime'

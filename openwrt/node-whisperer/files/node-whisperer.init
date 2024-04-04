@@ -30,7 +30,7 @@ load_config() {
 	ubus -t 10 wait_for node_whisperer
 
 	config_load node-whisperer
-	config_foreach uci_nw node-whisperer
+	config_foreach uci_nw settings
 }
 
 reload_service() {
@@ -50,10 +50,14 @@ start_service()
 {
 	ENABLED="$(uci -q get node-whisperer.settings.enabled)"
 	ENABLED="${ENABLED:-1}"
+	LOG_LEVEL="$(uci -q get node-whisperer.settings.log_level)"
+	LOG_LEVEL="${LOG_LEVEL:-3}"
 
 	[ "$ENABLED" -gt 0 ] || return
 
 	procd_open_instance
 	procd_set_param command "$PROG"
+	procd_append_param command -l "$LOG_LEVEL"
+	procd_append_param command -s
 	procd_close_instance
 }
