@@ -210,6 +210,27 @@ int node_whisperer_information_system_load_collect(uint8_t *buffer, size_t buffe
 	return 1;
 }
 
+int node_whisperer_information_firmware_version_collect(uint8_t *buffer, size_t buffer_size) {
+	char *firmware_version;
+	size_t firmware_version_len;
+	int ret;
+
+	ret = nw_read_file("/lib/gluon/release", &firmware_version, &firmware_version_len);
+	if (ret) {
+		return ret;
+	}
+
+	if (firmware_version_len > buffer_size) {
+		free(firmware_version);
+		return -1;
+	}
+
+	memcpy(buffer, firmware_version, firmware_version_len);
+	free(firmware_version);
+
+	return firmware_version_len;
+}
+
 #else
 
 int node_whisperer_information_hostname_parse(const uint8_t *ie_buf, size_t ie_len) {
@@ -306,6 +327,22 @@ int node_whisperer_information_system_load_parse(const uint8_t *ie_buf, size_t i
 	return 0;
 }
 
+int node_whisperer_information_firmware_version_parse(const uint8_t *ie_buf, size_t ie_len) {
+	char *tmp;
+
+	tmp = malloc(ie_len + 1);
+	if (!tmp)
+		return -1;
+
+	memcpy(tmp, ie_buf, ie_len);
+	tmp[ie_len] = '\0';
+
+	printf("Firmware version: %s\n", tmp);
+	free(tmp);
+
+	return 0;
+}
+
 #endif
 
 
@@ -316,6 +353,7 @@ struct nw_information_source information_sources[] = {
 	INFORMATION_SOURCE(site_code, 3),
 	INFORMATION_SOURCE(domain, 4),
 	INFORMATION_SOURCE(system_load, 5),
+	INFORMATION_SOURCE(firmware_version, 6),
 	INFORMATION_SOURCE(batman_adv, 20),
 	{},
 };
