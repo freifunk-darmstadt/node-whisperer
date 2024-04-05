@@ -195,6 +195,21 @@ out_free:
 	return ret;
 }
 
+int node_whisperer_information_system_load_collect(uint8_t *buffer, size_t buffer_size) {
+	double samples[3];
+
+	if (buffer_size < 1) {
+		return -1;
+	}
+
+	if (getloadavg(samples, 3) < 3) {
+		return -1;
+	}
+
+	buffer[0] = (uint8_t) samples[0] * 10;
+	return 1;
+}
+
 #else
 
 int node_whisperer_information_hostname_parse(const uint8_t *ie_buf, size_t ie_len) {
@@ -280,6 +295,17 @@ int node_whisperer_information_domain_parse(const uint8_t *ie_buf, size_t ie_len
 	return 0;
 }
 
+int node_whisperer_information_system_load_parse(const uint8_t *ie_buf, size_t ie_len) {
+	double load;
+
+	if (ie_len < 1)
+		return -1;
+
+	load = (double)ie_buf[0] / 0.1;
+	printf("System load: %.1f\n", load);
+	return 0;
+}
+
 #endif
 
 
@@ -289,6 +315,7 @@ struct nw_information_source information_sources[] = {
 	INFORMATION_SOURCE(uptime, 2),
 	INFORMATION_SOURCE(site_code, 3),
 	INFORMATION_SOURCE(domain, 4),
+	INFORMATION_SOURCE(system_load, 5),
 	INFORMATION_SOURCE(batman_adv, 20),
 	{},
 };
