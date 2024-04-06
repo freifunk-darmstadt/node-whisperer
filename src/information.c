@@ -82,7 +82,7 @@ int node_whisperer_information_batman_adv_collect(uint8_t *buffer, size_t buffer
 	uint16_t num_clients;
 	int ret;
 
-	if (buffer_size < 3) {
+	if (buffer_size < 8) {
 		return -1;
 	}
 
