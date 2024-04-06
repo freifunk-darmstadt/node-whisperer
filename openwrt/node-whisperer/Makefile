@@ -29,9 +29,10 @@ define Package/node-whisperer/conffiles
 endef
 
 define Package/node-whisperer/install
-	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc/init.d $(1)/etc/config
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc/init.d $(1)/etc/config $(1)/lib/gluon/upgrade
 	$(CP) $(PKG_BUILD_DIR)/src/node-whisperer $(1)/usr/bin
 	$(INSTALL_BIN) ./files/node-whisperer.init $(1)/etc/init.d/node-whisperer
+	$(INSTALL_BIN) ./files/node-whisperer.upgrade.lua $(1)/lib/gluon/upgrade/150-node-whisperer
 	$(CP) ./files/node-whisperer.uci $(1)/etc/config/node-whisperer
 endef
 
