@@ -637,6 +637,8 @@ int main(int argc, char *argv[])
 	/* Clear list of scanned nodes */
 	memset(&scanned_nodes, 0, sizeof(scanned_nodes));
 
+	log_set_level(LL_DEBUG);
+
 	ifindex = if_nametoindex(argv[1]);
 	log_debug("Interface index: %d", ifindex);
 	ret = nl80211_socket_alloc(&wifi);

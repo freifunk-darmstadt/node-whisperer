@@ -225,6 +225,10 @@ int node_whisperer_information_firmware_version_collect(uint8_t *buffer, size_t 
 		return -1;
 	}
 
+	if (firmware_version_len > 1 && firmware_version[firmware_version_len - 1] == '\n') {
+		firmware_version_len--;
+	}
+
 	memcpy(buffer, firmware_version, firmware_version_len);
 	free(firmware_version);
 
