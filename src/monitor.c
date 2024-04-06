@@ -629,15 +629,16 @@ int main(int argc, char *argv[])
 	int ifindex;
 	int ret;
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <interface>", argv[0]);
+	if (argc < 2) {
+		fprintf(stderr, "Usage: %s <interface> [debug]", argv[0]);
 		return 1;
 	}
 
 	/* Clear list of scanned nodes */
 	memset(&scanned_nodes, 0, sizeof(scanned_nodes));
 
-	log_set_level(LL_DEBUG);
+	if (argc == 3 && atoi(argv[2]) == 1)
+		log_set_level(LL_DEBUG);
 
 	ifindex = if_nametoindex(argv[1]);
 	log_debug("Interface index: %d", ifindex);
