@@ -17,6 +17,7 @@ extern struct nw_information_source information_sources[];
 
 static int nw_daemon_create_vendor_element_buf(struct nw *instance) {
 	uint8_t *element_length;
+	char hexbuf[BEACON_BUFFER_SIZE * 2 + 1];
 
 	/* Free buffer if it exists*/
 	if (instance->output.buf) {
@@ -89,6 +90,11 @@ static int nw_daemon_create_vendor_element_buf(struct nw *instance) {
 			log_error("Error collecting Information for id=%d name=%s code=%d",
 				  information_sources[i].type, information_sources[i].name, ret);
 			continue;
+		} else {
+			nw_buffer_to_hexstring(&instance->output.buf[instance->output.len + 2], ret, hexbuf);
+			/* Information available */
+			log_debug("Information available for id=%d name=%s element_length=%d content=%s",
+				  information_sources[i].type, information_sources[i].name, ret, hexbuf);
 		}
 
 		/* Update Length of Field*/
