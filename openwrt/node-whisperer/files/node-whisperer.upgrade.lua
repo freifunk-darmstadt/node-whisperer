@@ -29,6 +29,10 @@ if not sources_set then
     sources = default_sources
 end
 
-uci:set('node-whisperer', 'settings', 'disabled', disabled)
+uci:delete('node-whisperer', 'settings')
+uci:section('node-whisperer', 'settings', 'settings', {
+    disabled = disabled,
+})
 uci:set('node-whisperer', 'settings', 'information', sources)
 uci:commit('node-whisperer')
+
