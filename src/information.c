@@ -206,7 +206,7 @@ int node_whisperer_information_system_load_collect(uint8_t *buffer, size_t buffe
 		return -1;
 	}
 
-	buffer[0] = (uint8_t) samples[0] * 10;
+	buffer[0] = (uint8_t) (samples[0] * 10);
 	return 1;
 }
 
