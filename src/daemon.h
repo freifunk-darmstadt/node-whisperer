@@ -2,9 +2,15 @@
 
 #include "node-whisperer.h"
 
+struct nw_enabled_interface {
+	struct list_head list;
+	char *name;
+};
+
 struct nw {
-	struct ubus_context *ubus_ctx;
+	struct ubus_context ubus_ctx;
 	struct uloop_timeout update_timeout;
+	struct list_head enabled_interfaces;
 
 	struct {
 		uint8_t *buf;

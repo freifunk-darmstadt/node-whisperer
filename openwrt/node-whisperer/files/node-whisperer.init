@@ -23,6 +23,13 @@ uci_nw() {
 	config_list_foreach "$cfg" "information" uci_nw_add_json_string
 	json_close_array
 	ubus call node_whisperer set_sources "$(json_dump)"
+
+	# Enabled interfaces
+	json_init
+	json_add_array interfaces
+	config_list_foreach "$cfg" "interface" uci_nw_add_json_string
+	json_close_array
+	ubus call node_whisperer set_interfaces "$(json_dump)"
 }
 
 load_config() {

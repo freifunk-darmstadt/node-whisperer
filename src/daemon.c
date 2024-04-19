@@ -130,7 +130,7 @@ static void nw_daemon_collect_information(struct uloop_timeout *timeout) {
 
 	/* Update nodes */
 	log_debug("Update %s", buf_hex);
-	nw_interface_update(instance->ubus_ctx, (char *)buf_hex);
+	nw_interface_update(&instance->ubus_ctx, (char *)buf_hex);
 
 	instance->statistics.update_count++;
 
@@ -141,18 +141,19 @@ out_free:
 
 static int start_daemon() {
 	struct nw instance = {};
+	
+	INIT_LIST_HEAD(&instance.enabled_interfaces);
 
 	uloop_init();
 
-	instance.ubus_ctx = ubus_connect(NULL);
-	if (!instance.ubus_ctx) {
-		fprintf(stderr, "Failed to connect to ubus");
+	if (ubus_connect_ctx(&instance.ubus_ctx, NULL)) {
+		log_error("Failed to connect to ubus");
 		return -1;
 	}
 
 	/* Init ubus */
-	ubus_add_uloop(instance.ubus_ctx);
-	nw_ubus_init(instance.ubus_ctx);
+	ubus_add_uloop(&instance.ubus_ctx);
+	nw_ubus_init(&instance.ubus_ctx);
 
 	/* Add Information gathering timer */
 	instance.update_timeout.cb = nw_daemon_collect_information;

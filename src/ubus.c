@@ -1,9 +1,72 @@
+#include <string.h>
+
 #include "node-whisperer.h"
 #include "daemon.h"
 
 extern struct nw_information_source information_sources[];
 
 static struct blob_buf b;
+
+static struct blobmsg_policy set_interfaces_policy[] = {
+	{ .name = "interfaces", .type = BLOBMSG_TYPE_ARRAY, },
+};
+
+static int nw_ubus_set_interfaces(struct ubus_context *ctx, struct ubus_object *obj,
+				  struct ubus_request_data *req, const char *method,
+				  struct blob_attr *msg)
+{
+	struct nw *nw = container_of(ctx, struct nw, ubus_ctx);
+	struct nw_enabled_interface *iface;
+	const char *ifname;
+	struct blob_attr *cur;
+	struct blob_attr *tb = NULL;
+	size_t rem;
+
+	/* Parse message */
+	blobmsg_parse(set_interfaces_policy, 1, &tb, blob_data(msg), blob_len(msg));
+	if (!tb)
+		return UBUS_STATUS_INVALID_ARGUMENT;
+
+	log_debug("Setting new interface list\n");
+
+	/* Clear list */
+	while (!list_empty(&nw->enabled_interfaces)) {
+		log_debug("Clearing interface list\n");
+		iface = list_first_entry(&nw->enabled_interfaces, struct nw_enabled_interface, list);
+		list_del(&iface->list);
+		free(iface->name);
+		free(iface);
+	}
+
+	log_debug("Setting interface list\n");
+
+	/* Add new interfaces */
+	blobmsg_for_each_attr(cur, tb, rem) {
+		if (blobmsg_type(cur) != BLOBMSG_TYPE_STRING)
+			return UBUS_STATUS_INVALID_ARGUMENT;
+
+		ifname = blobmsg_get_string(cur);
+		if (!ifname)
+			return UBUS_STATUS_INVALID_ARGUMENT;
+		
+		log_debug("Add interface %s\n", ifname);
+
+		iface = calloc(1, sizeof(*iface));
+		if (!iface)
+			return UBUS_STATUS_UNKNOWN_ERROR;
+		
+		iface->name = strdup(ifname);
+		if (!iface->name) {
+			free(iface);
+			return UBUS_STATUS_UNKNOWN_ERROR;
+		}
+
+		list_add_tail(&iface->list, &nw->enabled_interfaces);
+	}
+
+	return 0;
+}
+
 
 static struct blobmsg_policy source_toggle_arg[] = {
 	{ .name = "information_sources", .type = BLOBMSG_TYPE_ARRAY, },
@@ -109,6 +172,7 @@ static int nw_ubus_statistics(struct ubus_context *ctx, struct ubus_object *obj,
 }
 
 static const struct ubus_method nw_methods[] = {
+	UBUS_METHOD("set_interfaces", nw_ubus_set_interfaces, set_interfaces_policy),
 	UBUS_METHOD("set_sources", nw_ubus_enable_source, source_toggle_arg),
 	UBUS_METHOD_NOARG("get_sources", nw_ubus_get_sources),
 	UBUS_METHOD_NOARG("statistics", nw_ubus_statistics),

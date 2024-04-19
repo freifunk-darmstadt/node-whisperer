@@ -1,4 +1,7 @@
 #include "node-whisperer.h"
+#include "daemon.h"
+
+#define UBUS_HOSTAPD_PREFIX "hostapd."
 
 static LIST_HEAD(nw_interfaces);
 static struct blob_buf b;
@@ -23,14 +26,44 @@ static void nw_interface_handle_remove(struct ubus_context *ctx,
 	nw_interface_remove(ctx, iface);
 }
 
+static int nw_interface_enabled(struct nw *instance, const char *name)
+{
+	struct nw_enabled_interface *iface;
+	const char *hostapd_name;
+
+	/* Always enabled when list of enabled interfaces empty */
+	if (list_empty(&instance->enabled_interfaces)) {
+		return 1;
+	}
+
+	if (strlen(name) <= strlen(UBUS_HOSTAPD_PREFIX)) {
+		return 0;
+	}
+
+	hostapd_name = (char *)name + strlen(UBUS_HOSTAPD_PREFIX);
+
+	list_for_each_entry(iface, &instance->enabled_interfaces, list) {
+		if (!strcmp(hostapd_name, iface->name)) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 int nw_interface_update(struct ubus_context *ctx, char *vendor_elements)
 {
+	struct nw *instance = container_of(ctx, struct nw, ubus_ctx);
 	struct nw_interface *iface;
 	int ret;
 
 	list_for_each_entry(iface, &nw_interfaces, list) {
 		blob_buf_init(&b, 0);
 		blobmsg_add_string(&b, "vendor_elements", vendor_elements);
+
+		if (!nw_interface_enabled(instance, iface->ubus.name)) {
+			continue;
+		}
 
 		log_debug("Sending vendor elements to id=%d name=%s", iface->ubus.id, iface->ubus.name);
 		ret = ubus_invoke(ctx, iface->ubus.id, "set_vendor_elements", b.head, NULL, NULL, 1000);
@@ -40,6 +73,7 @@ int nw_interface_update(struct ubus_context *ctx, char *vendor_elements)
 			/* Delete element */
 			blob_buf_init(&b, 0);
 			blobmsg_add_string(&b, "vendor_elements", "");
+			
 			ret = ubus_invoke(ctx, iface->ubus.id, "set_vendor_elements", b.head, NULL, NULL, 1000);
 			if (ret) {
 				log_error("Failed to reset vendor elements for id=%d name=%s code=%d", iface->ubus.id, iface->ubus.name, ret);
