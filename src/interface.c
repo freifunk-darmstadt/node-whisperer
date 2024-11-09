@@ -122,6 +122,7 @@ int nw_interface_add(struct ubus_context *ctx, int id, const char *name)
 	iface->ubus.subscriber.cb = nw_interface_handle_event;
 	iface->ubus.subscriber.remove_cb = nw_interface_handle_remove;
 	ubus_register_subscriber(ctx, &iface->ubus.subscriber);
+	ubus_subscribe(ctx, &iface->ubus.subscriber, iface->ubus.id);
 
 	log_info("Registered interface %s", iface->ubus.name);
 
