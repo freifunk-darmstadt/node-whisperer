@@ -35,4 +35,4 @@ all:
 	$(CC) $(CFLAGS) -D_GNU_SOURCE -o node-whisperer daemon.c util.c information.c log.c ubus.c interface.c batadv.c $(LDFLAGS)
 
 monitor:
-	$(CC) $(CFLAGS_MONITOR) -o monitor monitor.c log.c util.c ieee80211.c information.c $(LDFLAGS_MONITOR) 
+	$(CC) $(CFLAGS_MONITOR) -D_GNU_SOURCE -o monitor monitor.c log.c util.c ieee80211.c information.c $(LDFLAGS_MONITOR) 
