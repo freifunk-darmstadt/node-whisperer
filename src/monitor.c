@@ -213,7 +213,7 @@ int nl_get_multicast_id(struct nl80211_sock *sock, const char *family, const cha
 	nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, ack_handler, &ret);
 	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, family_handler, &grp);
 
-	ret = nl_send_auto(sock->nls, msg);
+	ret = nl_send_auto_complete(sock->nls, msg);
 	if (ret < 0) {
 		log_debug("nl_send_auto_complete() returned %d (%s).", ret, nl_geterror(-ret));
 		goto nla_put_failure;
@@ -290,7 +290,7 @@ int nl80211_trigger_scan(struct nl80211_sock *wifi, int ifindex)
 	nl_cb_set(cb, NL_CB_ACK, NL_CB_CUSTOM, ack_handler, &err);
 	nl_cb_set(cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, no_seq_check, NULL);
 
-	nl_send_auto(wifi->nls, msg);
+	nl_send_auto_complete(wifi->nls, msg);
 
 	while (err > 0)
 		ret = nl_recvmsgs(wifi->nls, cb);
@@ -542,9 +542,9 @@ int nl80211_get_scan_results(struct nl80211_sock *wifi, int ifindex)
 		goto out_free;
 	}
 
-	ret = nl_send_auto(wifi->nls, msg);
+	ret = nl_send_auto_complete(wifi->nls, msg);
 	if (ret < 0) {
-		log_error("nl_send_auto() returned %d (%s).", ret, nl_geterror(-ret));
+		log_error("nl_send_auto_complete() returned %d (%s).", ret, nl_geterror(-ret));
 		goto out_free;
 	}
 
