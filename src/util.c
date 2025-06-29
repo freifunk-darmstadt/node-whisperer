@@ -1,12 +1,15 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
-#include <string.h> // Add missing import
+#include "log.h"
 
 int nw_read_file(char *path, char **buf, size_t *len) {
 	FILE *f = fopen(path, "rb");
 	if (!f) {
+		log_warning("Failed to open file %s: %s", path, strerror(errno));
 		return -1;
 	}
 	fseek(f, 0, SEEK_END);
@@ -14,10 +17,15 @@ int nw_read_file(char *path, char **buf, size_t *len) {
 	fseek(f, 0, SEEK_SET);
 	*buf = malloc(*len);
 	if (!*buf) {
+		log_error("Failed to allocate %zu bytes for file %s", *len, path);
 		fclose(f);
 		return -1;
 	}
-	fread(*buf, 1, *len, f);
+	size_t read_len = fread(*buf, 1, *len, f);
+	if (read_len != *len) {
+		log_warning("Short read for file %s: expected %zu bytes, got %zu", path, *len, read_len);
+		*len = read_len;
+	}
 	fclose(f);
 	return 0;
 }

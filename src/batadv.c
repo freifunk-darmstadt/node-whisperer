@@ -165,6 +165,7 @@ int nw_get_batadv_clients() {
 							parse_clients_list_netlink_cb, NLM_F_DUMP,
 							&opts.query_opts);
 	if (ret < 0) {
+		log_error("Failed to query batman-adv clients: %d", ret);
 		return -1;
 	}
 
