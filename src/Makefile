@@ -31,7 +31,9 @@ CFLAGS:=$(CFLAGS_nl) $(CFLAGS_batadv) $(CFLAGS_json)
 LDFLAGS_MONITOR:=$(LDFLAGS_genl) -DBUILD_MONITOR
 CFLAGS_MONITOR:=$(CFLAGS_genl)
 
-all:
+all: node-whisperer node-monitor
+
+node-whisperer:
 	$(CC) $(CFLAGS) -D_GNU_SOURCE -o node-whisperer daemon.c util.c information.c log.c ubus.c interface.c batadv.c $(LDFLAGS)
 
 node-monitor:
