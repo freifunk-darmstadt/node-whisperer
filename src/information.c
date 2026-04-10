@@ -6,8 +6,7 @@
 #include <stddef.h>
 
 #include <arpa/inet.h>
-#include <linux/unistd.h>
-#include <linux/kernel.h>
+#include <sys/sysinfo.h>
 
 #include "batadv.h"
 #include "util.h"
