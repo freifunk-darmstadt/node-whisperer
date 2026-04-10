@@ -82,7 +82,7 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 		return NL_OK;
 
 	opts->stats->neighbor_count++;
-	if (!strncmp(ifname, "mesh-vpn", strlen(ifname))) {
+	if (!strncmp(ifname, "mesh-vpn", sizeof("mesh-vpn"))) {
 		opts->stats->vpn.tq = nla_get_u8(attrs[BATADV_ATTR_TQ]);
 		opts->stats->vpn.connected = 1;
 	}
