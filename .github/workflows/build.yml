@@ -21,8 +21,8 @@ jobs:
           - ref: main
             openwrt: "24.10.5"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           repository: freifunk-gluon/gluon
           path: gluon
@@ -32,7 +32,7 @@ jobs:
       - name: Remove Gluon
         run: rm -rf gluon
       - name: Build
-        uses: openwrt/gh-action-sdk@v7
+        uses: openwrt/gh-action-sdk@v11
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.gluon.openwrt }}
           FEEDNAME: packages_ci
@@ -40,7 +40,7 @@ jobs:
           KEY_BUILD: "RWRCSwAAAADDDX5uZK8x5UDT1RoVpOmbik/2kEoWm9q08QB6E0im50hNLwPpOfKCFURVvNR0iDGePQm5pnrZKX3OYyfsbv9G6eGsrlozbXFnGJXI3Szjb/Th7Uhd7mLSIh0wLyjIYEI="
           V: s
       - name: Store packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.arch }}-gluon-${{ matrix.gluon.ref }}-packages
           path: bin/packages/${{ matrix.arch }}/packages_ci/*.ipk
