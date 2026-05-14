@@ -2,25 +2,28 @@ name: Test Build
 on: [ push, pull_request]
 jobs:
   build:
-    name: ${{ matrix.arch }} ${{ matrix.version }}
+    name: ${{ matrix.arch }} (gluon ${{ matrix.gluon.ref }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         arch:
           - mips_24kc
           - mipsel_24kc
           - powerpc_8548
           - x86_64
-        version:
-          - "23.05.2"
-          - "main"
+        gluon:
+          - ref: v2025.1.x
+            openwrt: "24.10.5"
+          - ref: main
+            openwrt: "24.10.5"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
           repository: freifunk-gluon/gluon
           path: gluon
-          ref: 2689bcddc34f7e17b98844d87f5d96cc3414d50b
+          ref: ${{ matrix.gluon.ref }}
       - name: Move gluon packages
         run: mv gluon/package .
       - name: Remove Gluon
@@ -28,7 +31,7 @@ jobs:
       - name: Build
         uses: openwrt/gh-action-sdk@v7
         env:
-          ARCH: ${{ matrix.arch }}-${{ matrix.version }}
+          ARCH: ${{ matrix.arch }}-${{ matrix.gluon.openwrt }}
           FEEDNAME: packages_ci
           PACKAGES: "node-whisperer"
           KEY_BUILD: "RWRCSwAAAADDDX5uZK8x5UDT1RoVpOmbik/2kEoWm9q08QB6E0im50hNLwPpOfKCFURVvNR0iDGePQm5pnrZKX3OYyfsbv9G6eGsrlozbXFnGJXI3Szjb/Th7Uhd7mLSIh0wLyjIYEI="
@@ -36,5 +39,5 @@ jobs:
       - name: Store packages
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.arch }}-${{ matrix.version }}-packages
+          name: ${{ matrix.arch }}-gluon-${{ matrix.gluon.ref }}-packages
           path: bin/packages/${{ matrix.arch }}/packages_ci/*.ipk
