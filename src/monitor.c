@@ -360,8 +360,9 @@ static int monitor_gluon_node_parse_ie(const uint8_t *ie, size_t ie_len, void *d
 		return 0;
 	}
 
-	if (ie_len < 6 + 3) {
-		log_error("IE is too short.");
+	/* Need header + OUI + vendor type before inspecting vendor-specific fields */
+	if (ie_len < 6) {
+		log_debug("Vendor IE too short to inspect OUI.");
 		return 0;
 	}
 
@@ -372,6 +373,11 @@ static int monitor_gluon_node_parse_ie(const uint8_t *ie, size_t ie_len, void *d
 
 	if (ie[5] != 0x04) {
 		log_debug("IE is not a gluon node IE.");
+		return 0;
+	}
+
+	if (ie_len < 6 + 3) {
+		log_error("Gluon node IE is too short.");
 		return 0;
 	}
 
