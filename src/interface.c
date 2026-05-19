@@ -67,6 +67,10 @@ int nw_interface_update(struct ubus_context *ctx, char *vendor_elements)
 
 		log_debug("Sending vendor elements to id=%d name=%s", iface->ubus.id, iface->ubus.name);
 		ret = ubus_invoke(ctx, iface->ubus.id, "set_vendor_elements", b.head, NULL, NULL, 1000);
+		if (ret == UBUS_STATUS_TIMEOUT) {
+			log_info("Timeout sending vendor elements to id=%d name=%s", iface->ubus.id, iface->ubus.name);
+			continue;
+		}
 		if (ret) {
 			log_error("Failed to send vendor elements to id=%d name=%s code=%d", iface->ubus.id, iface->ubus.name, ret);
 
