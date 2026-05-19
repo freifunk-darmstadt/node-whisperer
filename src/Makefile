@@ -1,6 +1,6 @@
 CC ?= gcc
 CFLAGS_common ?= -Wall -Wextra -Werror -std=c99 -g
-LDFLAGS_common ?= 
+LDFLAGS_common ?=
 
 PKG_CONFIG ?= pkg-config
 
@@ -31,8 +31,10 @@ CFLAGS:=$(CFLAGS_nl) $(CFLAGS_batadv) $(CFLAGS_json)
 LDFLAGS_MONITOR:=$(LDFLAGS_genl) -DBUILD_MONITOR
 CFLAGS_MONITOR:=$(CFLAGS_genl)
 
-all:
+all: node-whisperer node-monitor
+
+node-whisperer:
 	$(CC) $(CFLAGS) -D_GNU_SOURCE -o node-whisperer daemon.c util.c information.c log.c ubus.c interface.c batadv.c $(LDFLAGS)
 
-monitor:
-	$(CC) $(CFLAGS_MONITOR) -D_GNU_SOURCE -o monitor monitor.c log.c util.c ieee80211.c information.c $(LDFLAGS_MONITOR) 
+node-monitor:
+	$(CC) $(CFLAGS_MONITOR) -D_GNU_SOURCE -o node-monitor monitor.c log.c util.c ieee80211.c information.c $(LDFLAGS_MONITOR)
